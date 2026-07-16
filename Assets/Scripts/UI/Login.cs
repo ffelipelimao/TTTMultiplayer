@@ -17,12 +17,12 @@ public class Login : MonoBehaviour
 
     void Connect()
     {
-        Debug.Log("Connecting to server...");
+        Client.Instance.Connect();
     }
 
     void Send()
     {
-        Debug.Log("Sending msg to server...");
+        Client.Instance.SendServer("Hello World!!");
     }
 
 }
