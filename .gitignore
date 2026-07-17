@@ -105,3 +105,12 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# --- .NET dedicated server (Server/) ---
+# The Unity template above ignores *.csproj and *.sln globally because Unity
+# regenerates them. The .NET server's project files are real source, so re-include them.
+!/Server/**/*.csproj
+!/Server/**/*.sln
+# Unity's /[Bb]in/ and /[Oo]bj/ rules are root-anchored and miss these.
+/Server/**/[Bb]in/
+/Server/**/[Oo]bj/

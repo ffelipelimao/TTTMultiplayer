@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>TTT.Server</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <!-- LiteNetLib.asmdef sets allowUnsafeCode: true; NativeSocket needs it. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Same source the Unity client compiles, so both sides always speak the
+         same protocol. The UnityEngine bits compile out via #if UNITY_*. -->
+    <Compile Include="../../Assets/LiteNetLib/**/*.cs" LinkBase="LiteNetLib" />
+  </ItemGroup>
+
+</Project>

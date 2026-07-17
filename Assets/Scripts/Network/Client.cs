@@ -39,6 +39,11 @@ public class Client : MonoBehaviour, INetEventListener
         Init();
     }
 
+    void Update()
+    {
+        _netManager.PollEvents();
+    }
+
     void Init()
     {
 
@@ -57,8 +62,39 @@ public class Client : MonoBehaviour, INetEventListener
 
     public void SendServer(string data)
     {
+        if (_netServer == null)
+        {
+            Debug.LogWarning("[Client] not connected yet, ignoring send");
+            return;
+        }
+
         var bytes = Encoding.UTF8.GetBytes(data);
         _netServer.Send(bytes, DeliveryMethod.ReliableOrdered);
+    }
+
+    //OnNetworkReceive the callback from server that we send in SendServer
+    public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)
+    {
+        var data = Encoding.UTF8.GetString(reader.GetRemainingBytes());
+        reader.Recycle();
+        Debug.Log($"[Client] data received from server: '{data}'");
+    }
+
+    public void OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType)
+    {
+
+    }
+
+    // OnPeerConnected and OnPeerDisconnected are the callbacks from server that we send in _netManager.Connect
+    public void OnPeerConnected(NetPeer peer)
+    {
+        Debug.Log($"[Client] connected to server at {peer}");
+        _netServer = peer;
+    }
+
+    public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
+    {
+        Debug.Log("[Client] lost connection to server!");
     }
 
     public void OnConnectionRequest(ConnectionRequest request)
@@ -74,29 +110,5 @@ public class Client : MonoBehaviour, INetEventListener
     public void OnNetworkLatencyUpdate(NetPeer peer, int latency)
     {
 
-    }
-
-    //OnNetworkReceive the callback from server that we send in SendServer
-    public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)
-    {
-        var data = Encoding.UTF8.GetString(reader.RawData).Replace("\0", "");
-        Debug.Log($"Data receive from server: '{data}'");
-    }
-
-    public void OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType)
-    {
-
-    }
-
-    // OnPeerConnected and OnPeerDisconnected are the callbacks from server that we send in _netManager.Connect
-    public void OnPeerConnected(NetPeer peer)
-    {
-        Debug.Log("Connected to server at " + peer);
-        _netServer = peer;
-    }
-
-    public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
-    {
-        Debug.Log("Lost connection to server!");
     }
 }
