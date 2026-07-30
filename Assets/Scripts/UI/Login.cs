@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
@@ -9,13 +10,17 @@ public class Login : MonoBehaviour
     private TMP_InputField _usernameInput;
     private TMP_InputField _passwordInput;
     private TextMeshProUGUI _loginText;
-
+    private TextMeshProUGUI _usernameErrorMessage;
+    private TextMeshProUGUI _loginErrorMessage;
     private string _username = string.Empty;
     private string _password = string.Empty;
+    public Transform _loadingUI;
+    private bool _isConnected;
+
+    private bool _isValidPassword;
 
     [SerializeField] private int _MaxPasswordLength = 10;
     [SerializeField] private int _MaxUsernameLength = 10;
-
 
 
     void Start()
@@ -29,41 +34,107 @@ public class Login : MonoBehaviour
 
         _passwordInput = transform.Find("PasswordInput").GetComponent<TMP_InputField>();
         _passwordInput.onValueChanged.AddListener(ChangePassword);
+
+        _usernameErrorMessage = _usernameInput.transform.Find("UsernameErrorMessage").GetComponent<TextMeshProUGUI>();
+        _loginErrorMessage = _loginButton.Find("LoginErrorMessage").GetComponent<TextMeshProUGUI>();
+
+        _usernameErrorMessage.text = string.Empty;
+        _loginErrorMessage.text = string.Empty;
+
+        EnableLoginButton(false);
+
+        Client.Instance.OnServerConnected += SetIsConnected;
+    }
+
+    void SetIsConnected()
+    {
+        _isConnected = true;
+    }
+
+    void OnDestroy()
+    {
+        Client.Instance.OnServerConnected -= SetIsConnected;
     }
 
     void LoginAction()
     {
-        Debug.Log("Logging in...");
+        StartCoroutine(LoginRoutine());
     }
+
     void ChangeUsername(string value)
     {
         _username = value;
-        ValidateAndUpdateUI();
+        ValidateUsernameAndUpdateUI();
     }
+
     void ChangePassword(string value)
     {
         _password = value;
-        ValidateAndUpdateUI();
+        _isValidPassword = ValidatePasswordAndUpdateUI();
+
+        EnableLoginButton(_isValidPassword);
     }
 
-    void ValidateAndUpdateUI()
+    bool ValidateUsernameAndUpdateUI()
     {
-        var usernameRegex = Regex.Match(_username, "^[a-zA-Z0-9]+$");
+        string error = string.Empty;
 
-        var interactable =
-            !string.IsNullOrWhiteSpace(_username) &&
-            !string.IsNullOrWhiteSpace(_password) &&
-            _username.Length <= _MaxUsernameLength &&
-            _password.Length <= _MaxPasswordLength &&
-            usernameRegex.Success;
+        if (string.IsNullOrWhiteSpace(_username))
+            error = "Empty username";
+        else if (_username.Length > _MaxUsernameLength)
+            error = $"Max {_MaxUsernameLength} chars.";
+        else if (!Regex.IsMatch(_username, "^[a-zA-Z0-9]+$"))
+            error = "Only letters and numbers to username.";
 
-        EnableLoginButton(interactable);
+        _usernameErrorMessage.text = error;
+
+        return string.IsNullOrEmpty(error);
     }
 
-    void EnableLoginButton(bool interactable)
+    bool ValidatePasswordAndUpdateUI()
     {
-        _loginButton.GetComponent<Button>().interactable = interactable;
-        var color = _loginButton.GetComponent<Button>().interactable ? Color.white : Color.grey;
-        _loginText.color = color;
+        string error = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(_password))
+            error = "Empty password.";
+        else if (_password.Length > _MaxPasswordLength)
+            error = $"Max {_MaxUsernameLength} chars.";
+
+        _loginErrorMessage.text = error;
+
+        return string.IsNullOrEmpty(error);
+    }
+
+
+    void EnableLoginButton(bool enable)
+    {
+        var button = _loginButton.GetComponent<Button>();
+        button.interactable = enable;
+        _loginText.color = button.interactable ? Color.white : Color.grey;
+    }
+
+    IEnumerator LoginRoutine()
+    {
+        Debug.Log("Logging in...");
+        EnableLoginButton(false);
+        _loadingUI.gameObject.SetActive(true);
+
+        Client.Instance.Connect();
+
+        while (!_isConnected)
+        {
+            Debug.Log("Connecting...");
+            yield return null;
+        }
+
+        Debug.Log("Connected!");
+
+        var authRequest = new Net_AuthRequest()
+        {
+            Username = _username,
+            Password = _password
+        };
+
+        Client.Instance.SendServer(authRequest);
     }
 }

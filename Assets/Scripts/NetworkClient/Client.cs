@@ -1,3 +1,4 @@
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -10,6 +11,8 @@ public class Client : MonoBehaviour, INetEventListener
     private NetManager _netManager;
     private NetPeer _netServer;
     private NetDataWriter _netDataWriter;
+
+    public event Action OnServerConnected;
 
     public static Client _instance;
 
@@ -60,16 +63,17 @@ public class Client : MonoBehaviour, INetEventListener
         _netManager.Connect("localhost", 9050, "");
     }
 
-    public void SendServer(string data)
+    public void SendServer<T>(T packet, DeliveryMethod deliveryMethod = DeliveryMethod.ReliableOrdered) where T : INetSerializable
     {
         if (_netServer == null)
         {
             Debug.LogWarning("[Client] not connected yet, ignoring send");
             return;
         }
+        _netDataWriter.Reset();
+        packet.Serialize(_netDataWriter);
+        _netServer.Send(_netDataWriter, deliveryMethod);
 
-        var bytes = Encoding.UTF8.GetBytes(data);
-        _netServer.Send(bytes, DeliveryMethod.ReliableOrdered);
     }
 
     //OnNetworkReceive the callback from server that we send in SendServer
@@ -90,6 +94,7 @@ public class Client : MonoBehaviour, INetEventListener
     {
         Debug.Log($"[Client] connected to server at {peer}");
         _netServer = peer;
+        OnServerConnected?.Invoke();
     }
 
     public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)

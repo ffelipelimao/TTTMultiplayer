@@ -13,7 +13,7 @@
   <ItemGroup>
     <!-- Same source the Unity client compiles, so both sides always speak the
          same protocol. The UnityEngine bits compile out via #if UNITY_*. -->
-    <Compile Include="../../Assets/LiteNetLib/**/*.cs" LinkBase="LiteNetLib" />
+    <Compile Include="../../Assets/Lib/LiteNetLib/**/*.cs" LinkBase="LiteNetLib" />
   </ItemGroup>
 
 </Project>
