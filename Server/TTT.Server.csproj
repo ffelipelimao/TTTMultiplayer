@@ -13,7 +13,13 @@
   <ItemGroup>
     <!-- Same source the Unity client compiles, so both sides always speak the
          same protocol. The UnityEngine bits compile out via #if UNITY_*. -->
-    <Compile Include="../../Assets/Lib/LiteNetLib/**/*.cs" LinkBase="LiteNetLib" />
+    <Compile Include="../Assets/Lib/LiteNetLib/**/*.cs" LinkBase="LiteNetLib" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.10" />
   </ItemGroup>
 
 </Project>
