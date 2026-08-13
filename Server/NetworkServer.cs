@@ -3,26 +3,34 @@ using System.Net.Sockets;
 using LiteNetLib;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using TTT.Server.Game;
 
 namespace TTT.Server;
 
-public class NetworkServer(ILogger<NetworkServer> logger, IServiceProvider provider) : INetEventListener
+public class NetworkServer : INetEventListener
 {
-    private readonly ILogger<NetworkServer> _logger = logger;
-    private readonly IServiceProvider _provider = provider;
-
+    private readonly ILogger<NetworkServer> _logger;
+    private readonly IServiceProvider _provider;
+    private UsersManager _usersManager;
     private NetManager _netManager;
-    private Dictionary<int, NetPeer> _connections;
+
+    public NetworkServer(ILogger<NetworkServer> logger, IServiceProvider provider)
+    {
+        _logger = logger;
+        _provider = provider;
+    }
+
 
     public void Start()
     {
-        _connections = new Dictionary<int, NetPeer>();
+
         _netManager = new NetManager(this)
         {
             DisconnectTimeout = 100000
         };
 
         _netManager.Start(9050);
+        _usersManager = _provider.GetRequiredService<UsersManager>();
 
         _logger.LogInformation("Server listening on {Port}", 9050);
     }
@@ -46,13 +54,14 @@ public class NetworkServer(ILogger<NetworkServer> logger, IServiceProvider provi
     public void OnPeerConnected(NetPeer peer)
     {
         _logger.LogInformation("Client connected to server: {Peer}. Id: {Id}", peer, peer.Id);
-        _connections.Add(peer.Id, peer);
+        _usersManager.AddConnection(peer);
     }
 
     public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
     {
+        _netManager.DisconnectPeer(peer);
+        _usersManager.RemoveConnection(peer.Id);
         _logger.LogInformation("Connection removed from server with Id: {Id}", peer.Id);
-        _connections.Remove(peer.Id);
     }
 
     public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)

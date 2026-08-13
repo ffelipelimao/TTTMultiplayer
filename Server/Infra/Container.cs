@@ -1,5 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using TTT.Server.Data;
+using TTT.Server.Game;
 
 namespace TTT.Server.Infra;
 
@@ -21,6 +23,8 @@ public static class Container
         services.AddSingleton<NetworkServer>();
         services.AddSingleton<PacketRegistry>();
         services.AddSingleton<HandleRegistry>();
+        services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+        services.AddSingleton<UsersManager>();
         services.AddPacketHandlers();
     }
 
