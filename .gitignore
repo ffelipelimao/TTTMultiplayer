@@ -114,3 +114,6 @@ InitTestScene*.unity*
 # Unity's /[Bb]in/ and /[Oo]bj/ rules are root-anchored and miss these.
 /Server/**/[Bb]in/
 /Server/**/[Oo]bj/
+
+# THE FUCKING .DS_Store
+.DS_Store

@@ -57,6 +57,16 @@ public class UsersManager(IUserRepository userRepository)
         return GetConnection(connectionId)?.User;
     }
 
+    public List<int> GetOtherConnectionIds(int excludedConnectionId)
+    {
+        // ToList() materializa antes de quem chamou começar a enviar: iterar o
+        // dicionário enquanto ele muda lançaria InvalidOperationException, o
+        // mesmo contrato do ConcurrentModificationException do Java.
+        return _connections.Keys
+            .Where(connectionId => connectionId != excludedConnectionId)
+            .ToList();
+    }
+
     public void RemoveConnection(int connectionId)
     {
         if (!_connections.Remove(connectionId, out var connection))

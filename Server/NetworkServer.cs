@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 using LiteNetLib;
+using LiteNetLib.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TTT.Server.Game;
@@ -13,6 +14,10 @@ public class NetworkServer : INetEventListener
     private readonly IServiceProvider _provider;
     private UsersManager _usersManager;
     private NetManager _netManager;
+
+    // Reaproveitado a cada envio: PollEvents roda numa thread só, então não há
+    // corrida aqui. Reset() zera a posição sem realocar o buffer.
+    private readonly NetDataWriter _cachedWriter = new();
 
     public NetworkServer(ILogger<NetworkServer> logger, IServiceProvider provider)
     {
@@ -101,6 +106,19 @@ public class NetworkServer : INetEventListener
 
     }
 
+    public void SendClient(int connectionId, INetPacket msg, DeliveryMethod method = DeliveryMethod.ReliableOrdered)
+    {
+        var peer = _usersManager.GetConnection(connectionId)?.Peer;
+
+        if (peer == null)
+        {
+            _logger.LogWarning("No connection found for Id: {Id}. Packet {Packet} dropped", connectionId, msg.Type);
+            return;
+        }
+
+        peer.Send(WriteSerializable(msg), method);
+    }
+
 
     public IPacketHandler ResolveHandler(PacketType packetType)
     {
@@ -117,5 +135,13 @@ public class NetworkServer : INetEventListener
         packet.Deserialize(reader);
 
         return packet;
+    }
+
+    private NetDataWriter WriteSerializable(INetPacket packet)
+    {
+        _cachedWriter.Reset();
+        packet.Serialize(_cachedWriter);
+
+        return _cachedWriter;
     }
 }
