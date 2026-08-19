@@ -1,5 +1,4 @@
 using LiteNetLib.Utils;
-using UnityEngine;
 
 public enum PacketType : byte
 {
@@ -10,6 +9,8 @@ public enum PacketType : byte
 
     #region ServerClient
     OnAuth = 100,
+    OnAuthFailed = 101,
+    OnServerStatus = 102,
     #endregion
 }
 

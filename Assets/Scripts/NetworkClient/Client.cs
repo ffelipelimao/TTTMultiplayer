@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -11,6 +12,13 @@ public class Client : MonoBehaviour, INetEventListener
     private NetManager _netManager;
     private NetPeer _netServer;
     private NetDataWriter _netDataWriter;
+
+    private HandleRegistry _handlerRegistry;
+    private PacketRegistry _packetRegistry;
+
+    // Handlers sao stateless, entao vale reaproveitar a instancia. O registry
+    // guarda o Type; este dicionario guarda o objeto ja construido.
+    private readonly Dictionary<PacketType, IPacketHandler> _handlers = new Dictionary<PacketType, IPacketHandler>();
 
     public event Action OnServerConnected;
 
@@ -49,7 +57,8 @@ public class Client : MonoBehaviour, INetEventListener
 
     void Init()
     {
-
+        _handlerRegistry = new HandleRegistry();
+        _packetRegistry = new PacketRegistry();
         _netDataWriter = new NetDataWriter();
         _netManager = new NetManager(this)
         {
@@ -79,9 +88,28 @@ public class Client : MonoBehaviour, INetEventListener
     //OnNetworkReceive the callback from server that we send in SendServer
     public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)
     {
-        var data = Encoding.UTF8.GetString(reader.GetRemainingBytes());
-        reader.Recycle();
-        Debug.Log($"[Client] data received from server: '{data}'");
+        try
+        {
+            var packetType = (PacketType)reader.GetByte();
+            var packet = ResolvePacket(packetType, reader);
+            var handler = ResolveHandler(packetType);
+
+            if (handler == null)
+            {
+                Debug.LogWarning($"[Client] no handler registered for {packetType}, packet dropped");
+                return;
+            }
+
+            handler.Handle(packet, peer.Id);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogException(ex);
+        }
+        finally
+        {
+            reader.Recycle();
+        }
     }
 
     public void OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType)
@@ -115,5 +143,31 @@ public class Client : MonoBehaviour, INetEventListener
     public void OnNetworkLatencyUpdate(NetPeer peer, int latency)
     {
 
+    }
+    public IPacketHandler ResolveHandler(PacketType packetType)
+    {
+        if (_handlers.TryGetValue(packetType, out var cached))
+        {
+            return cached;
+        }
+
+        if (!_handlerRegistry.Handlers.TryGetValue(packetType, out var type))
+        {
+            return null;
+        }
+
+        var handler = (IPacketHandler)Activator.CreateInstance(type);
+        _handlers[packetType] = handler;
+
+        return handler;
+    }
+
+    private INetPacket ResolvePacket(PacketType packetType, NetPacketReader reader)
+    {
+        var type = _packetRegistry.PacketType[packetType];
+        var packet = (INetPacket)Activator.CreateInstance(type);
+        packet.Deserialize(reader);
+
+        return packet;
     }
 }

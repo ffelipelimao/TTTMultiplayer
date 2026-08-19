@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Text.RegularExpressions;
 using TMPro;
+using TTT.PacketHandlers;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -44,6 +45,16 @@ public class Login : MonoBehaviour
         EnableLoginButton(false);
 
         Client.Instance.OnServerConnected += SetIsConnected;
+
+        OnAuthFailedHandler.OnAuthFailed += HandleAuthFailed;
+    }
+
+    void HandleAuthFailed(Net_OnAuthFailed msg)
+    {
+        _loadingUI.gameObject.SetActive(false);
+        _loginErrorMessage.text = "Invalid username or password.";
+
+        EnableLoginButton(_isValidPassword);
     }
 
     void SetIsConnected()
@@ -53,6 +64,8 @@ public class Login : MonoBehaviour
 
     void OnDestroy()
     {
+        OnAuthFailedHandler.OnAuthFailed -= HandleAuthFailed;
+
         Client.Instance.OnServerConnected -= SetIsConnected;
     }
 
