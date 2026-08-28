@@ -3482,12 +3482,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1355021686}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2a8579d033e7b4f11bae165c1e316a42, type: 3}
+  m_Script: {fileID: 11500000, guid: 2f0370501d2794e5092ae56757f0e5e6, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Login
-  _loadingUI: {fileID: 0}
-  _MaxPasswordLength: 10
-  _MaxUsernameLength: 10
+  m_EditorClassIdentifier: Assembly-CSharp::Lobby
 --- !u!1 &1385789414
 GameObject:
   m_ObjectHideFlags: 0
