@@ -8,9 +8,9 @@ public class InMemoryUserRepository : IUserRepository
     {
         _users =
         [
-            new() { Username = "player1", Password = "123456", IsOnline = true, Score = 10 },
-            new() { Username = "player2", Password = "123456", IsOnline = true, Score = 25 },
-            new() { Username = "player3", Password = "123456", IsOnline = true, Score = 5 },
+            new() { Username = "player1", Password = "123456", IsOnline = false, Score = 10 },
+            new() { Username = "player2", Password = "123456", IsOnline = false, Score = 25 },
+            new() { Username = "player3", Password = "123456", IsOnline = false, Score = 5 },
         ];
     }
 
@@ -29,6 +29,10 @@ public class InMemoryUserRepository : IUserRepository
     public User Get(string id)
     {
         return _users.FirstOrDefault(u => u.Id == id);
+    }
+    public ushort GetTotalCount()
+    {
+        return (ushort)_users.Count(x => x.IsOnline);
     }
 
     public IQueryable<User> GetQuery()

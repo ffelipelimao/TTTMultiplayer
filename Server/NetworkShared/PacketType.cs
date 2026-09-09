@@ -5,6 +5,7 @@ public enum PacketType : byte
     #region ClientServer
     Invalid = 0,
     AuthRequest = 1,
+    ServerStatusRequest = 2,
     #endregion
 
     #region ServerClient

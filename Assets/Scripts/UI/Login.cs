@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using TMPro;
 using TTT.PacketHandlers;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class Login : MonoBehaviour
@@ -19,6 +20,8 @@ public class Login : MonoBehaviour
     private bool _isConnected;
 
     private bool _isValidPassword;
+
+    private const string LobbyScene = "01_Lobby";
 
     [SerializeField] private int _MaxPasswordLength = 10;
     [SerializeField] private int _MaxUsernameLength = 10;
@@ -46,7 +49,13 @@ public class Login : MonoBehaviour
 
         Client.Instance.OnServerConnected += SetIsConnected;
 
+        OnAuthHandler.OnAuth += HandleAuth;
         OnAuthFailedHandler.OnAuthFailed += HandleAuthFailed;
+    }
+
+    void HandleAuth(Net_OnAuth msg)
+    {
+        SceneManager.LoadScene(LobbyScene);
     }
 
     void HandleAuthFailed(Net_OnAuthFailed msg)
@@ -64,6 +73,7 @@ public class Login : MonoBehaviour
 
     void OnDestroy()
     {
+        OnAuthHandler.OnAuth -= HandleAuth;
         OnAuthFailedHandler.OnAuthFailed -= HandleAuthFailed;
 
         Client.Instance.OnServerConnected -= SetIsConnected;

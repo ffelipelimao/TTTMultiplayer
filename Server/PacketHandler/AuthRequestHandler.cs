@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using TTT.Server;
+using TTT.Server.Data;
 using TTT.Server.Game;
 
 [HandlerRegister(PacketType.AuthRequest)]
@@ -9,12 +10,18 @@ public class AuthRequestHandler : IPacketHandler
     private readonly ILogger<AuthRequestHandler> _logger;
     private readonly UsersManager _usersManager;
     private readonly NetworkServer _server;
+    private readonly IUserRepository _userRepository;
 
-    public AuthRequestHandler(ILogger<AuthRequestHandler> logger, UsersManager usersManager, NetworkServer server)
+    public AuthRequestHandler(
+        ILogger<AuthRequestHandler> logger,
+        UsersManager usersManager,
+        NetworkServer server,
+        IUserRepository userRepository)
     {
         _logger = logger;
         _usersManager = usersManager;
         _server = server;
+        _userRepository = userRepository;
     }
 
     public void Handle(INetPacket packet, int connectionId)
@@ -46,8 +53,11 @@ public class AuthRequestHandler : IPacketHandler
 
     private void NotifyOtherPlayers(int excludedConnectionId)
     {
-        // TODO: implement fully
-        var rmsg = new Net_OnServerStatus();
+        var rmsg = new Net_OnServerStatus
+        {
+            PlayersCount = _userRepository.GetTotalCount(),
+            Players = _usersManager.GetTopPlayers()
+        };
 
         var otherIds = _usersManager.GetOtherConnectionIds(excludedConnectionId);
 

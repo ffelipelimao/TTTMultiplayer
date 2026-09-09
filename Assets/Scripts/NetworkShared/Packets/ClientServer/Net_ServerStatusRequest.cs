@@ -1,6 +1,6 @@
 using LiteNetLib.Utils;
 
-public struct Net_ServerStatusRequest : INetPacket
+public class Net_ServerStatusRequest : INetPacket
 {
     public PacketType Type => PacketType.ServerStatusRequest;
 
@@ -11,6 +11,6 @@ public struct Net_ServerStatusRequest : INetPacket
 
     public void Serialize(NetDataWriter writer)
     {
-
+        writer.Put((byte)Type);
     }
 }

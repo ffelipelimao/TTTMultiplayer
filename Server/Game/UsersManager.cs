@@ -59,9 +59,6 @@ public class UsersManager(IUserRepository userRepository)
 
     public List<int> GetOtherConnectionIds(int excludedConnectionId)
     {
-        // ToList() materializa antes de quem chamou começar a enviar: iterar o
-        // dicionário enquanto ele muda lançaria InvalidOperationException, o
-        // mesmo contrato do ConcurrentModificationException do Java.
         return _connections.Keys
             .Where(connectionId => connectionId != excludedConnectionId)
             .ToList();
@@ -74,5 +71,18 @@ public class UsersManager(IUserRepository userRepository)
 
         if (connection.User != null)
             _userRepository.SetOffline(connection.User.Id);
+    }
+
+    public Net_PlayerStatus[] GetTopPlayers()
+    {
+        return [.. _userRepository.GetQuery()
+            .OrderByDescending(u => u.Score)
+            .Select(x => new Net_PlayerStatus
+            {
+                IsOnline = x.IsOnline,
+                Score = x.Score,
+                Username = x.Username
+            }).Take(9)];
+
     }
 }

@@ -13,4 +13,6 @@ public interface IRepository<T> where T : class
     IQueryable<T> GetQuery();
 
     void Delete(string id);
+
+    ushort GetTotalCount();
 }

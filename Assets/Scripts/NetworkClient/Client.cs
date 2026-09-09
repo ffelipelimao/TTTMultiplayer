@@ -16,8 +16,6 @@ public class Client : MonoBehaviour, INetEventListener
     private HandleRegistry _handlerRegistry;
     private PacketRegistry _packetRegistry;
 
-    // Handlers sao stateless, entao vale reaproveitar a instancia. O registry
-    // guarda o Type; este dicionario guarda o objeto ja construido.
     private readonly Dictionary<PacketType, IPacketHandler> _handlers = new Dictionary<PacketType, IPacketHandler>();
 
     public event Action OnServerConnected;
@@ -32,16 +30,16 @@ public class Client : MonoBehaviour, INetEventListener
         }
     }
 
-
     void Awake()
     {
-        if (_instance != null)
+        if (_instance != null && Instance != this)
         {
             Destroy(gameObject);
         }
         else
         {
             _instance = this;
+            DontDestroyOnLoad(gameObject);
         }
     }
 

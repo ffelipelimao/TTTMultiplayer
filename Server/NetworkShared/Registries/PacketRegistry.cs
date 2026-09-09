@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 /// <summary>
 /// Maps each <see cref="PacketType"/> to the class that models that packet on
 /// the wire.
