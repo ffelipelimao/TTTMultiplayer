@@ -53,6 +53,25 @@ public class Client : MonoBehaviour, INetEventListener
         _netManager.PollEvents();
     }
 
+    void OnApplicationQuit()
+    {
+        Disconnect();
+    }
+
+    public void Disconnect()
+    {
+        _netManager.DisconnectAll();
+        _netServer = null;
+    }
+
+    void OnDestroy()
+    {
+        if (_netServer != null)
+        {
+            _netManager.Stop();
+        }
+    }
+
     void Init()
     {
         _handlerRegistry = new HandleRegistry();

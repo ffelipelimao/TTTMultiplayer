@@ -2,17 +2,7 @@ namespace TTT.Server.Data;
 
 public class InMemoryUserRepository : IUserRepository
 {
-    private readonly List<User> _users;
-
-    public InMemoryUserRepository()
-    {
-        _users =
-        [
-            new() { Username = "player1", Password = "123456", IsOnline = false, Score = 10 },
-            new() { Username = "player2", Password = "123456", IsOnline = false, Score = 25 },
-            new() { Username = "player3", Password = "123456", IsOnline = false, Score = 5 },
-        ];
-    }
+    private readonly List<User> _users = [];
 
     public void Add(User entity)
     {

@@ -1,14 +1,21 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class Lobby : MonoBehaviour
 {
     [SerializeField] private Transform _topPlayersContainer;
+    [SerializeField] private Transform _logoutButton;
     [SerializeField] private TextMeshProUGUI _playersOnlineLbl;
     [SerializeField] private GameObject _playerRowPrefab;
 
+    private const string LoginScene = "00_Main";
+
     void Start()
     {
+        _logoutButton.GetComponent<Button>().onClick.AddListener(LogoutAction);
+
         OnServerStatusRequestHandler.OnServerStatus += Refresh;
         RequestSeverStatus();
     }
@@ -39,6 +46,13 @@ public class Lobby : MonoBehaviour
     {
         var msg = new Net_ServerStatusRequest();
         Client.Instance.SendServer(msg);
+    }
+
+    void LogoutAction()
+    {
+        Debug.Log("Logging out...");
+        Client.Instance.Disconnect();
+        SceneManager.LoadScene(LoginScene);
     }
 
 }

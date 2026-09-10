@@ -3,9 +3,10 @@ using TTT.Server.Data;
 
 namespace TTT.Server.Game;
 
-public class UsersManager(IUserRepository userRepository)
+public class UsersManager(IUserRepository userRepository, NetworkServer server)
 {
     private readonly IUserRepository _userRepository = userRepository;
+    private readonly NetworkServer _server = server;
     private readonly Dictionary<int, ServerConnection> _connections = new();
 
     public bool LoginOrRegister(int connectionId, string username, string password)
@@ -71,6 +72,8 @@ public class UsersManager(IUserRepository userRepository)
 
         if (connection.User != null)
             _userRepository.SetOffline(connection.User.Id);
+
+        NotifyOtherPlayers(connectionId);
     }
 
     public Net_PlayerStatus[] GetTopPlayers()
@@ -84,5 +87,21 @@ public class UsersManager(IUserRepository userRepository)
                 Username = x.Username
             }).Take(9)];
 
+    }
+
+    private void NotifyOtherPlayers(int excludedConnectionId)
+    {
+        var rmsg = new Net_OnServerStatus
+        {
+            PlayersCount = _userRepository.GetTotalCount(),
+            Players = GetTopPlayers()
+        };
+
+        var otherIds = GetOtherConnectionIds(excludedConnectionId);
+
+        foreach (var connectionId in otherIds)
+        {
+            _server.SendClient(connectionId, rmsg);
+        }
     }
 }
