@@ -9,11 +9,16 @@ public class Lobby : MonoBehaviour
     [SerializeField] private Transform _logoutButton;
     [SerializeField] private TextMeshProUGUI _playersOnlineLbl;
     [SerializeField] private GameObject _playerRowPrefab;
+    [SerializeField] private Button _findOpponentButton;
+    [SerializeField] private Transform _loadingContainer;
+    [SerializeField] private Button _cancelButton;
 
     private const string LoginScene = "00_Main";
 
     void Start()
     {
+        _findOpponentButton.onClick.AddListener(FindOpponent);
+        _cancelButton.onClick.AddListener(CancelFindOpponent);
         _logoutButton.GetComponent<Button>().onClick.AddListener(LogoutAction);
 
         OnServerStatusRequestHandler.OnServerStatus += Refresh;
@@ -41,7 +46,6 @@ public class Lobby : MonoBehaviour
             instance.Init(player);
         }
     }
-
     void RequestSeverStatus()
     {
         var msg = new Net_ServerStatusRequest();
@@ -53,6 +57,33 @@ public class Lobby : MonoBehaviour
         Debug.Log("Logging out...");
         Client.Instance.Disconnect();
         SceneManager.LoadScene(LoginScene);
+    }
+
+    void FindOpponent()
+    {
+        //hide the find opponent button
+        // show loading UI
+        // send net find opponent request message
+
+        _findOpponentButton.gameObject.SetActive(false);
+        _loadingContainer.gameObject.SetActive(true);
+
+        var msg = new Net_FindOpponentRequest();
+        Client.Instance.SendServer(msg);
+    }
+
+    void CancelFindOpponent()
+    {
+        //hide loading UI
+        // show the find opponent button
+        // send net find opponent request message
+
+
+        _findOpponentButton.gameObject.SetActive(true);
+        _loadingContainer.gameObject.SetActive(false);
+
+        var msg = new Net_CancelFindOpponentRequest();
+        Client.Instance.SendServer(msg);
     }
 
 }
