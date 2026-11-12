@@ -25,6 +25,7 @@ public static class Container
         services.AddSingleton<HandleRegistry>();
         services.AddSingleton<IUserRepository, InMemoryUserRepository>();
         services.AddSingleton<UsersManager>();
+        services.AddSingleton<Matchmaker>();
         services.AddPacketHandlers();
     }
 
