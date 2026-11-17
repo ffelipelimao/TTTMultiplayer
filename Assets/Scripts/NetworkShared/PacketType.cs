@@ -15,6 +15,7 @@ public enum PacketType : byte
     OnAuthFailed = 101,
     OnServerStatus = 102,
     OnFindOpponent = 103,
+    OnStartMatch = 104,
     #endregion
 }
 

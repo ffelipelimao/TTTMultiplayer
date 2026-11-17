@@ -9,6 +9,7 @@ public class Net_OnServerStatus : INetPacket
 
     public Net_PlayerStatus[] Players { get; set; } = System.Array.Empty<Net_PlayerStatus>();
 
+
     public void Deserialize(NetDataReader reader)
     {
         PlayersCount = reader.GetUShort();
