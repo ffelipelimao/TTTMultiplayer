@@ -1,7 +1,9 @@
 SERVER_PROJ := Server/TTT.Server.csproj
+SHARED_SRC := Server/NetworkShared/
+SHARED_DST := Assets/Scripts/NetworkShared/
 CONFIG ?= Debug
 
-.PHONY: help server build run watch clean restore add-package remove-package list-packages
+.PHONY: help server build run watch clean restore add-package remove-package list-packages sync-shared
 
 help:
 	@echo "  make server          Build and run the server (alias of run)"
@@ -15,6 +17,7 @@ help:
 	@echo "  make remove-package PKG=<name>"
 	@echo "                       Remove a NuGet package from the server project"
 	@echo "  make list-packages   List the server project NuGet packages"
+	@echo "  make sync-shared     Copy Server/NetworkShared to the Unity client and verify"
 
 server: run 
 
@@ -51,3 +54,11 @@ endif
 
 list-packages:
 	dotnet list $(SERVER_PROJ) package
+
+# Server/NetworkShared e a fonte da verdade; o client recebe uma copia.
+# --delete remove do client o .cs que saiu do server. Os .meta ficam de fora:
+# sao do Unity, e ele mesmo cria/limpa os que sobrarem.
+sync-shared:
+	rsync -a --delete --itemize-changes --exclude '*.meta' $(SHARED_SRC) $(SHARED_DST)
+	diff -r -x '*.meta' $(SHARED_SRC) $(SHARED_DST)
+	@echo "NetworkShared sincronizado."

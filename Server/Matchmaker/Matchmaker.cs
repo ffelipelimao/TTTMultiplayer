@@ -1,13 +1,19 @@
 using Microsoft.Extensions.Logging;
+using TTT.Server;
 using TTT.Server.Game;
 
 public class Matchmaker
 {
     private List<MMRequest> _pool = new List<MMRequest>();
     private readonly ILogger<Matchmaker> _logger;
-    public Matchmaker(ILogger<Matchmaker> logger)
+    private readonly GamesManager _gamesManager;
+    private readonly NetworkServer _server;
+
+    public Matchmaker(ILogger<Matchmaker> logger, GamesManager gamesManager, NetworkServer server)
     {
         _logger = logger;
+        _gamesManager = gamesManager;
+        _server = server;
     }
 
     public void RegisterPlayer(ServerConnection Connection)
@@ -32,7 +38,7 @@ public class Matchmaker
             "Player {Username} (connection {ConnectionId}) joined matchmaking. Pool size: {PoolSize}",
             Connection.User.Username, Connection.ConnectionId, _pool.Count);
 
-        // DoMatchmaking();
+        DoMatchmaking();
     }
 
     public void TryUnregisterPlayer(string name)
@@ -67,14 +73,35 @@ public class Matchmaker
             matchedRequested.Add(request);
             matchedRequested.Add(match);
 
-            var xUser = request.Connection.User.Id;
-            var oUser = match.Connection.User.Id;
-            //_gameManager.RegisterGame(xUser, oUser)
-            //send Net_OnStartGame();
+            var xUser = request.Connection.User.Username;
+            var oUser = match.Connection.User.Username;
+            var gameId = _gamesManager.RegisterGame(xUser, oUser);
+
+            request.Connection.GameId = gameId;
+            match.Connection.GameId = gameId;
+
+            var msg = new Net_OnStartGame
+            {
+                GameId = gameId,
+                XUser = xUser,
+                OUser = oUser,
+
+            };
+
+            var playerOne = request.Connection.ConnectionId;
+            var playerTwo = match.Connection.ConnectionId;
+
+            _server.SendClient(playerOne, msg);
+            _server.SendClient(playerTwo, msg);
+
             _logger.LogInformation(
-                "Match found: {XUsername} (X, {XUserId}) vs {OUsername} (O, {OUserId})",
-                request.Connection.User.Username, xUser,
-                match.Connection.User.Username, oUser);
+                "Match found: {XUsername} (X) vs {OUsername} (O). Game {GameId}",
+                xUser, oUser, gameId);
+        }
+
+        foreach (var request in matchedRequested)
+        {
+            _pool.Remove(request);
         }
     }
 }
